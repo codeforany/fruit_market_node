@@ -890,14 +890,15 @@ module.exports.controller = (app, io, socket_list) => {
         checkAccessToken(req.headers, res, (uObj) => {
 
             helper.CheckParameterValid(res, reqObj, ['order_id'], () => {
-                db.query('UPDATE `order_detail` SET `status`=3,`modify_date`= NOW() WHERE `order_id` = ? AND `delivery_boy_id` = ? AND `status` = 2', [reqObj.order_id, uObj.user_id], (err, result) => {
+                db.query('UPDATE `order_detail` SET `status`=3,`modify_date`= NOW() WHERE `order_id` = ? AND `delivery_boy_id` = ? AND `status` = 2;' +
+                    'UPDATE `order_item_detail` SET  `status`= 3, `modify_date` = NOW() WHERE `order_id` = ? AND `status` >= 1 && `status` <4 ', [reqObj.order_id, uObj.user_id, reqObj.order_id,], (err, result) => {
 
                     if (err) {
                         helper.ThrowHtmlError(err, res)
                         return
                     }
 
-                    if (result.affectedRows > 0) {
+                    if (result[0].affectedRows > 0) {
 
                         db.query('INSERT INTO `order_status_detail`(`order_id`, `order_status`) VALUES (?,?)', [reqObj.order_id, 3], (err, result) => {
 
