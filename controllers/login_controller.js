@@ -939,8 +939,8 @@ module.exports.controller = (app, io, socket_list) => {
 
         checkAccessToken(req.headers, res, (uObj) => {
 
-            helper.CheckParameterValid(res, reqObj, ['order_id', 'latitude', 'longitude', ], () => {
-                db.query('UPDATE `order_detail` SET `status`=4,`modify_date`= NOW() WHERE `order_id` = ? AND `delivery_boy_id` = ? AND `status` = 3', [reqObj.order_id, uObj.user_id], (err, result) => {
+            helper.CheckParameterValid(res, reqObj, ['item_order_id', 'order_id' , 'latitude', 'longitude', ], () => {
+                db.query('UPDATE `order_item_detail` SET `status`=4,`modify_date`= NOW() WHERE `item_order_id` = ? AND `delivery_boy_id` = ? AND `status` = 3', [reqObj.item_order_id, uObj.user_id], (err, result) => {
 
                     if (err) {
                         helper.ThrowHtmlError(err, res)
@@ -949,12 +949,31 @@ module.exports.controller = (app, io, socket_list) => {
 
                     if (result.affectedRows > 0) {
 
-                        db.query('INSERT INTO `order_status_detail`(`order_id`, `order_status`, `latitude`, `longitude` ) VALUES (?,?,?, ?)', [reqObj.order_id, 4, reqObj.latitude, reqObj.longitude  ], (err, result) => {
+                        db.query('INSERT INTO `order_status_detail`(`item_order_id`, `order_status`, `latitude`, `longitude` ) VALUES (?,?,?, ?);' +
+                            'SELECT `order_id`, `item_order_id`, `status` FROM `order_item_detail` WHERE `order_id` = ? AND `status` >= ? AND `status` < ? ', [reqObj.item_order_id, 4, reqObj.latitude, reqObj.longitude , reqObj.order_id, 4 ], (err, result) => {
 
                             if (err) {
                                 helper.ThrowHtmlError(err)
 
                             }
+
+                            if(result[1].length == 0) {
+
+                                db.query('UPDATE `order_detail` SET `status`=4,`modify_date`= NOW() WHERE `order_id` = ? AND `delivery_boy_id` = ? AND `status` = 3', [reqObj.order_id, uObj.user_id], (err, result) => {
+
+                                    if (err) {
+                                        helper.ThrowHtmlError(err)
+
+                                    }
+
+                                    if(result.affectedRows > 0) {
+                                        helper.Dlog("Order Status Update done")
+                                    }
+
+                                })
+
+                            }
+                            
 
 
                             res.json({
