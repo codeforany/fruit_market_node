@@ -748,12 +748,13 @@ module.exports.controller = (app, io, socket_list) => {
 
         checkAccessToken(req.headers, res, (uObj) => {
 
-            db.query('SELECT `od`.`order_id`, `od`.`user_id`, `od`.`payment_type`, `od`.`payment_status`, `oid`.`status`, `od`.`created_date`, `oid`.`item_order_id`, `oid`.`total_amount`, `oid`.`offer_amount`, `oid`.`pay_amount`, `cd`.`qty`, `iid`.`item_name`, `iid`.`description`, (CASE WHEN `iid`.`image` != ""  THEN CONCAT( "' + helper.ImagePath() + '" , `iid`.`image`  ) ELSE "" END) AS `image`, `pd`.`amount`, `pd`.`unit_id`, `ud`.`unit_name`, IFNULL(`rd`.`rate`, 0.0) AS `rating` FROM `order_detail` AS `od` ' +
+            db.query('SELECT `od`.`order_id`, `od`.`user_id`, `od`.`payment_type`, `od`.`payment_status`, `oid`.`status` AS `order_status`, `od`.`status`, `od`.`created_date`, `oid`.`item_order_id`, `oid`.`total_amount`, `oid`.`offer_amount`, `oid`.`pay_amount`, `cd`.`qty`, `iid`.`item_name`, `iid`.`description`, (CASE WHEN `iid`.`image` != ""  THEN CONCAT( "' + helper.ImagePath() + '" , `iid`.`image`  ) ELSE "" END) AS `image`, `pd`.`amount`, `pd`.`unit_id`, `ud`.`unit_name`, IFNULL(`rd`.`rate`, 0.0) AS `rating`,`aud`.`name`, `aud`.`mobile_code`, `aud`.`mobile`, `od`.`address`, `od`.`lati`, `od`.`longi`, `od`.`zip_code` , `iid`.`item_id` FROM `order_detail` AS `od` ' +
                 'INNER JOIN`order_item_detail` AS`oid` ON`oid`.`order_id` = `od`.`order_id`' +
                 'INNER JOIN`cart_detail` AS`cd` ON`oid`.`cart_id` = `cd`.`cart_id`' +
                 'INNER JOIN`item_detail` AS`iid` ON`iid`.`item_id` = `cd`.`item_id`' +
                 'INNER JOIN`price_detail` AS`pd` ON`pd`.`price_id` = `cd`.`price_id`' +
                 'INNER JOIN`unit_detail` AS`ud` ON`ud`.`unit_id` = `pd`.`unit_id`' +
+                'INNER JOIN`user_detail` AS `aud` ON `aud`.`user_id` = `od`.`user_id` '+
                 'LEFT JOIN `review_detail` AS `rd` ON `oid`.`item_order_id` = `rd`.`item_order_id` ' +
                 'WHERE`od`.`user_id` = ? ORDER BY`od`.`order_id` DESC', [uObj.user_id], (err, result) => {
 
@@ -859,7 +860,7 @@ module.exports.controller = (app, io, socket_list) => {
 
         checkAccessToken(req.headers, res, (uObj) => {
 
-            db.query('SELECT `od`.`order_id`, `od`.`user_id`, `od`.`delivery_boy_id`, `od`.`payment_type`, `od`.`address`, `od`.`lati`, `od`.`longi`, `od`.`zip_code`, `od`.`user_pay_order_amount`, `od`.`status`, `od`.`modify_date`, `od`.`created_date` , `ud`.`name`, `ud`.`mobile_code`, `ud`.`mobile`, `oid`.`item_order_id`, `oid`.`price_id`, `oid`.`total_amount`, `oid`.`offer_amount`, `oid`.`pay_amount`, `oid`.`status` as `order_status`, `iid`.`item_name`, (CASE WHEN `iid`.`image` != "" THEN CONCAT("'+ helper.ImagePath() +'", `iid`.`image` ) ELSE "" END) AS `image`, `iid`.`description`, `cd`.`qty`, `uud`.`unit_name` FROM `order_detail` AS `od`' +
+            db.query('SELECT `od`.`order_id`, `od`.`user_id`, `od`.`delivery_boy_id`, `od`.`payment_type`, `od`.`address`, `od`.`lati`, `od`.`longi`, `od`.`zip_code`, `od`.`user_pay_order_amount`, `od`.`status`, `od`.`modify_date`, `od`.`created_date` , `ud`.`name`, `ud`.`mobile_code`, `ud`.`mobile`, `oid`.`item_order_id`, `oid`.`price_id`, `oid`.`total_amount`, `oid`.`offer_amount`, `oid`.`pay_amount`, `oid`.`status` as `order_status`, `iid`.`item_name`, (CASE WHEN `iid`.`image` != "" THEN CONCAT("' + helper.ImagePath() +'", `iid`.`image` ) ELSE "" END) AS `image`, `iid`.`description`, `cd`.`qty`, `uud`.`unit_name`, `iid`.`item_id` FROM `order_detail` AS `od`' +
                 'INNER JOIN `order_item_detail` AS `oid` ON `oid`.`order_id` = `od`.`order_id` AND `oid`.`status` > 0 ' +
                 'INNER JOIN `cart_detail` AS `cd` ON `cd`.`cart_id` = `oid`.`cart_id` ' +
                 'INNER JOIN `item_detail` AS `iid` ON `iid`.`item_id` = `cd`.`item_id` '+
