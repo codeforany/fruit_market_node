@@ -603,7 +603,7 @@ module.exports.controller = (app, io, socket_list) => {
         checkAccessToken(req.headers, res, (uObj) => {
             helper.CheckParameterValid(res, reqObj, ['item_id'], () => {
 
-                db.query('SELECT `rate_id`, `item_id`, `item_order_id`, `rate`, `message`, `user_id`, `status`, `created_date`, `modify_date` FROM `review_detail` AS `rd` '
+                db.query('SELECT `rd`.`rate_id`, `rd`.`item_id`, `rd`.`item_order_id`, `rd`.`rate`, `rd`.`message`, `rd`.`user_id`, `rd`.`status`, `rd`.`created_date`, `rd`.`modify_date`, `ud`.`name` FROM `review_detail` AS `rd` '
                     + 'INNER JOIN`user_detail` AS`ud` ON`ud`.`user_id` = `rd`.`user_id`' +
                     'WHERE`rd`.`item_id` = ? AND`rd`.`status` != 2 ', [reqObj.item_id], (err, result) => {
 
