@@ -607,20 +607,48 @@ module.exports.controller = (app, io, socket_list) => {
                     + 'INNER JOIN`user_detail` AS`ud` ON`ud`.`user_id` = `rd`.`user_id`' +
                     'WHERE`rd`.`item_id` = ? AND`rd`.`status` != 2 ', [reqObj.item_id], (err, result) => {
 
-                        if (err) {
-                            helper.ThrowHtmlError(err, res);
-                            return
-                        }
+                    if (err) {
+                        helper.ThrowHtmlError(err, res);
+                        return
+                    }
+                    res.json({
+                        'status': '1',
+                        'payload': result
+                    })
+                })
+            })
+        },'3')
+    })
 
+    app.post('/api/admin/review_delete', (req, res) => {
+
+        helper.Dlog(req.body);
+        var reqObj = req.body;
+
+        checkAccessToken(req.headers, res, (uObj) => {
+            helper.CheckParameterValid(res, reqObj, ['rate_id'], () => {
+
+                db.query('UPDATE `review_detail` SET `status`=?,`modify_date`= NOW() WHERE `rate_id` = ? AND `status` != ? ', [2, reqObj.rate_id, 2], (err, result) => {
+
+                    if (err) {
+                        helper.ThrowHtmlError(err, res);
+                        return
+                    }
+
+                    if (result.affectedRows > 0) {
                         res.json({
                             'status': '1',
-                            'payload': result
+                            'message': 'review deleted'
                         })
-
-                    })
-
+                    } else {
+                        res.json({
+                            'status': '0',
+                            'message': msg_fail
+                        })
+                    }
+                })
             })
-        }, '1')
+        }, '3')
 
     })
 
