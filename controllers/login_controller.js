@@ -2617,18 +2617,16 @@ module.exports.controller = (app, io, socket_list) => {
 
         checkAccessToken(req.headers, res, (uObj) => {
 
-            db.query(' SELECT SUM( `order_id` ) AS `orders`, SUM( `total_order_amount`) AS `revenue`, SUM( CASE WHEN `status` >= 1 AND `status` <4 THEN 1 ELSE 0 END) AS `active_delivery`  FROM `order_detail` WHERE `status` > 0 AND `status` < 5 AND DATE(`created_date`) = CURDATE();' +
+            db.query(' SELECT IFNULL( SUM( `order_id` ), 0) AS `orders`, IFNULL(SUM( `total_order_amount`), 0) AS `revenue`, IFNULL(SUM( CASE WHEN `status` >= 1 AND `status` <4 THEN 1 ELSE 0 END), 0) AS `active_delivery`  FROM `order_detail` WHERE `status` > 0 AND `status` < 5 AND DATE(`created_date`) = CURDATE();' +
                 'SELECT COUNT(`user_id`) AS `new_customer` FROM `user_detail` WHERE `user_type` = ? AND DATE(`created_date`) = CURDATE();' +
                 
                 
                 ' SELECT `day_date`.`date`, IFNULL(`od`.`orders`, 0 ) AS `orders`, IFNULL(`od`.`revenue`,0.0) AS `revenue` FROM ( SELECT DATE( DATE_ADD(NOW(), INTERVAL -1 * `C`.`daynum` DAY) ) AS `date` FROM ( SELECT t*10+u AS daynum FROM (SELECT 0 AS t UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 ) AS A, (SELECT 0 AS u UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 ) AS B )AS C WHERE C.daynum < 30  ) AS `day_date` ' +
-                'LEFT JOIN ( SELECT SUM( `order_id` ) AS `orders`, SUM( `total_order_amount`) AS `revenue`, DATE(`created_date`) AS `date`  FROM `order_detail` WHERE `status` > 0 AND `status` < 5 AND ( DATE( DATE_ADD(NOW(), INTERVAL -30 DAY) ) >= CURDATE() AND  DATE(`created_date`) <= CURDATE()) GROUP BY DATE(`created_date`) ) AS `od` ON `od`.`date` = `day_date`.`date` ORDER BY `day_date`.`date` ;' +
+                'LEFT JOIN ( SELECT SUM( `order_id` ) AS `orders`, SUM( `total_order_amount`) AS `revenue`, DATE(`created_date`) AS `date`  FROM `order_detail` WHERE `status` > 0 AND `status` < 5 AND ( `created_date` BETWEEN DATE( DATE_ADD(NOW(), INTERVAL -30 DAY) ) AND CURDATE()) GROUP BY DATE(`created_date`) ) AS `od` ON `od`.`date` = `day_date`.`date` ORDER BY `day_date`.`date` ;' +
 
                 ' SELECT `day_date`.`date`, IFNULL(`ud`.`new_customer`, 0 ) AS `new_customer` FROM ( SELECT DATE( DATE_ADD(NOW(), INTERVAL -1 * `C`.`daynum` DAY) ) AS `date` FROM ( SELECT t*10+u AS daynum FROM (SELECT 0 AS t UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 ) AS A, (SELECT 0 AS u UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 ) AS B )AS C WHERE C.daynum < 30  ) AS `day_date` ' +
-                'LEFT JOIN ( SELECT COUNT(`user_id`) AS `new_customer` FROM `user_detail` WHERE `user_type` = ? AND ( DATE( DATE_ADD(NOW(), INTERVAL -30 DAY) ) >= CURDATE() AND  DATE(`created_date`) <= CURDATE()) GROUP BY DATE(`created_date`) ) AS `ud` ON `ud`.`date` = `day_date`.`date` ORDER BY `day_date`.`date` ;' +
-
-
-                ' ORDER BY `date`; '
+                'LEFT JOIN ( SELECT COUNT(`user_id`) AS `new_customer`, DATE(`created_date`) AS `date` FROM `user_detail` WHERE `user_type` = ? AND ( `created_date` BETWEEN DATE( DATE_ADD(NOW(), INTERVAL -30 DAY) ) AND CURDATE()) GROUP BY DATE(`created_date`) ) AS `ud` ON `ud`.`date` = `day_date`.`date` ' +
+                ' ORDER BY `day_date`.`date`; '
                 
                 , [
                     1, 1
