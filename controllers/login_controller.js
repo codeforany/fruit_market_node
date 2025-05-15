@@ -1085,6 +1085,49 @@ module.exports.controller = (app, io, socket_list) => {
 
     })
 
+    app.post('/api/app/delivery_boy_dashboard', (req, res) => {
+
+        helper.Dlog(req.body)
+        var reqObj = req.body
+
+        checkAccessToken(req.headers, res, (uObj) => {
+
+            db.query(' SELECT IFNULL( SUM( `order_id` ), 0) AS `orders`, IFNULL( SUM( CASE WHEN `payment_type` = 1 THEN  `total_order_amount` ELSE 0 END ), 0) AS `collect_revenue`, IFNULL(SUM( CASE WHEN `status` >= 1 AND `status` <4 THEN 1 ELSE 0 END), 0) AS `active_delivery`  FROM `order_detail` WHERE `delivery_boy_id` = ? AND  `status` > 1 AND `status` < 5 AND DATE(`created_date`) = CURDATE();' +
+                
+
+
+                ' SELECT `day_date`.`date`, IFNULL(`od`.`orders`, 0 ) AS `orders`, IFNULL(`od`.`revenue`,0.0) AS `collect_revenue` FROM ( SELECT DATE( DATE_ADD(NOW(), INTERVAL -1 * `C`.`daynum` DAY) ) AS `date` FROM ( SELECT t*10+u AS daynum FROM (SELECT 0 AS t UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 ) AS A, (SELECT 0 AS u UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 ) AS B )AS C WHERE C.daynum < 30  ) AS `day_date` ' +
+                'LEFT JOIN ( SELECT SUM( `order_id` ) AS `orders`, SUM( CASE WHEN `payment_type` = 1 THEN  `total_order_amount` ELSE 0 END ) AS `revenue`, DATE(`created_date`) AS `date`  FROM `order_detail` WHERE `delivery_boy_id` = ? AND `status` > 0 AND `status` < 5 AND ( `created_date` BETWEEN DATE( DATE_ADD(NOW(), INTERVAL -30 DAY) ) AND CURDATE()) GROUP BY DATE(`created_date`) ) AS `od` ON `od`.`date` = `day_date`.`date` ORDER BY `day_date`.`date` ;'
+                
+
+                , [
+                    uObj.user_id, uObj.user_id
+                ], (err, result) => {
+
+                    if (err) {
+                        helper.ThrowHtmlError(err, res)
+                        return
+                    }
+
+                    res.json({
+                        'status': '1',
+                        'payload': {
+                            'order': result[0][0].orders,
+                            'revenue': result[0][0].revenue,
+                            'active_delivery': result[0][0].active_delivery,
+                            'chart': {
+                                'order_info': result[1]
+                            }
+                        }
+                    })
+
+                })
+
+
+        }, '2')
+
+    })
+
 
     app.post('/api/admin/main_category_add', (req, res) => {
 
