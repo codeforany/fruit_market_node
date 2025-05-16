@@ -1113,7 +1113,7 @@ module.exports.controller = (app, io, socket_list) => {
                         'status': '1',
                         'payload': {
                             'order': result[0][0].orders,
-                            'revenue': result[0][0].revenue,
+                            'collect_revenue': result[0][0].collect_revenue,
                             'active_delivery': result[0][0].active_delivery,
                             'chart': {
                                 'order_info': result[1]
